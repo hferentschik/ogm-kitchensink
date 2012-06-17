@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+ * Hibernate, Relational Persistence for Idiomatic Java
+ * 
+ * Copyright (c) 2012, Red Hat, Inc. and/or its affiliates or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat, Inc.
+ * 
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+  -->
+<persistence version="2.0"
+             xmlns="http://java.sun.com/xml/ns/persistence" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="
+        http://java.sun.com/xml/ns/persistence
+        http://java.sun.com/xml/ns/persistence/persistence_2_0.xsd">
+
+   <persistence-unit name="kitchen">
+      <provider>org.hibernate.ejb.HibernatePersistence</provider>
+
+        <!-- Default H2 example data source of AS 7 -->
+        <jta-data-source>java:jboss/datasources/ExampleDS</jta-data-source>
+
+        <properties>
+            <!-- Properties for Hibernate -->
+            <property name="hibernate.hbm2ddl.auto" value="create-drop" />
+            <property name="hibernate.show_sql" value="true" />
+
+            <!-- Properties for Hibernate Search -->
+            <property name="hibernate.search.default.directory_provider" value="infinispan" />
+            <property name="hibernate.search.infinispan.configuration_resourcename" value="infinispan.xml" />
+        </properties>
+
+        <class>org.jboss.as.quickstarts.kitchensink.model.Member</class>
+        <class>org.jboss.as.quickstarts.kitchensink.model.ContactDetails</class>
+
+    </persistence-unit>
+
+</persistence>

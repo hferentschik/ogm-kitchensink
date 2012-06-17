@@ -1,9 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <jboss-deployment-structure>
     <deployment>
-        <!-- only needed when trying to access the Infinispan cache directly. -->
         <dependencies>
-            <module name="org.infinispan"/>
+
+            <module name="org.hibernate" slot="ogm" />
+            <module name="org.codehaus.jackson.jackson-core-asl"/>
+            <module name="org.codehaus.jackson.jackson-mapper-asl"/>
+
         </dependencies>
     </deployment>
 </jboss-deployment-structure>
