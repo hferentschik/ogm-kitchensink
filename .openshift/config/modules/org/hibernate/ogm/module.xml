@@ -23,10 +23,8 @@
 <module xmlns="urn:jboss:module:1.1" name="org.hibernate" slot="ogm">
 
     <resources>
-        <resource-root path="hibernate-ogm-core-4.0.0-SNAPSHOT.jar"/>
-        <resource-root path="hibernate-ogm-ehcache-4.0.0-SNAPSHOT.jar"/>
-        <resource-root path="hibernate-ogm-infinispan-4.0.0-SNAPSHOT.jar"/>
-        <resource-root path="hibernate-ogm-mongodb-4.0.0-SNAPSHOT.jar"/>
+        <resource-root path="hibernate-ogm-core-4.0.0.Beta1.jar"/>
+        <resource-root path="hibernate-ogm-infinispan-4.0.0.Beta1.jar"/>
 
         <!-- One day this will depend on org.hibernate (ORM) rather than replace it;
            for now we need the updated jars which are not in AS 7.1.1: -->
@@ -36,12 +34,10 @@
 
         <!-- And we need to override Infinispan as well as it's SPI changed
             between 5.1.2 and 5.1.5: LifecycleCallbacks -->
-        <resource-root path="infinispan-core-5.1.5.FINAL.jar"/>
+        <resource-root path="infinispan-core-5.1.7.FINAL.jar"/>
 
         <!-- Note that Infinispan 2nd level cache integration is missing -->
     </resources>
-
-    <!-- TODO: to be able to use MongoDB or EHCache integration appropriate dependencies should be added. -->
 
     <dependencies>
         <module name="asm.asm"/>
@@ -55,9 +51,6 @@
         <module name="org.javassist"/>
         <module name="org.jboss.as.jpa.hibernate" slot="4" optional="true"/>
         <module name="org.jboss.logging"/>
-
-        <!-- To support envers, it should be updated to match ORM version -->
-        <!-- <module name="org.hibernate.envers" services="import" optional="true"/> -->
 
         <!-- Dependencies of Infinispan -->
         <module name="javax.xml.bind.api"/>
