@@ -19,6 +19,12 @@
 
 # Demo
 
+## Ruby setup
+
+        $ rvm gemset create ogm
+        $ rvm gemset use ogm
+        $ gem install httparty nokogiri choice
+
 ## Demo JPA version
 
 * Switch to JPA using patch file
@@ -44,11 +50,12 @@
         $ ruby member-generator.rb -a http://localhost:8080/ogm-kitchensink -c 20
 
 ## Demo OGM version
-* Switch to OGM (replacement code should be already in the source commented out)
+
+* Switch to OGM (by reverting back patch changes)
+       * Show AS custom module and how to enable it via _jboss-deployment-structure.xml_
        * Add dependencies to _pom.xml_
        * Change persistence provider in _persistence.xml_
-       * Enable Hibernate 3 module (also _persistence.xml_)
-       * Switch to UUID as entity ids (don't forget to switch the id type to _String_)
+       * Switch to UUID as entity ids
        * Switch to Search for querying
            * Need to add Search annotations
            * Switch from Criteria to Search in _beans.xml_  (via alternatives)
@@ -68,13 +75,7 @@
 * Explain rvm
 * Get the Openshift Express ruby scripts installed
 
-        $ rvm gemset create ogm
-        $ rvm gemset use ogm
         $ gem install rhc
-        // for the ruby script
-        $ gem install httparty
-        $ gem install nokogiri
-        $ gem install choice
 
 * Use the rhc commands to create domain and applications (well, ogm domain is already created, use different one if you want to demo it)
 
