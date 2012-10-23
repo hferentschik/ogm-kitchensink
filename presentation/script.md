@@ -16,14 +16,21 @@
         $ gem install nokogiri
         $ gem install choice
 
-# JPA
+
+# Demo
+
+## Demo JPA version
+
+* Switch to JPA using patch file
+
+        $ git apply presentation/0001-Switch-to-JPA.patch
 
 * Show structure and build
     * _persistence.xml_
     * Domain classes _Member_ and _ContactDetails_
     * _MemberRegistration_ and _MemberListProducer_
     * look no _web.xml_ :-)
-* Run Arquillian test (eg remotely, server must be running)
+* Run Arquillian test
 
         $ mvn test
 
@@ -36,7 +43,7 @@
 
         $ ruby member-generator.rb -a http://localhost:8080/ogm-kitchensink -c 20
 
-# OGM
+## Demo OGM version
 * Switch to OGM (replacement code should be already in the source commented out)
        * Add dependencies to _pom.xml_
        * Change persistence provider in _persistence.xml_
@@ -55,7 +62,7 @@
 
         $ ruby member-generator.rb -a http://localhost:8080/ogm-kitchensink -c 20
 
-# OpenShift
+## Demo OpenShift app creation and deployment
 
 * Explain OpenShift
 * Explain rvm
@@ -68,7 +75,6 @@
         $ gem install httparty
         $ gem install nokogiri
         $ gem install choice
-
 
 * Use the rhc commands to create domain and applications (well, ogm domain is already created, use different one if you want to demo it)
 
