@@ -80,15 +80,12 @@
 * Use the rhc commands to create domain and applications (well, ogm domain is already created, use different one if you want to demo it)
 
         $ rhc-create-domain -n ogm
-        $ rhc-create-app -a kitchensink -t jbossas-7.0 --nogit
+        $ rhc-create-app -a kitchensink -t jbossas-7 --nogit -l <user>
 
 * Explain _openshift_ profile in _pom.xml_ (gets enabled during build on server side)
 * Explain hooks and layout of _.openshift_
     * modules directory
     * _standalone.xml_
-    * Caveat! - _standalone.xml_ contains IP addresses specific to a created app. If app gets destroyed and recreated the IPs need to be updated.
-    The next release of OpenShift will allow to use variables. For this reason _action_hooks/build_  contains the line 'export' to dump env variables.
-    This way we can view the IP needed to add to _standalone.xml_
 * Add the git repo created by rhc-create-app as remote to the demo
 
         $ git remote add openshift <repo-url>

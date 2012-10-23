@@ -34,7 +34,7 @@
 
         <!-- And we need to override Infinispan as well as it's SPI changed
             between 5.1.2 and 5.1.5: LifecycleCallbacks -->
-        <resource-root path="infinispan-core-5.1.7.FINAL.jar"/>
+        <resource-root path="infinispan-core-5.1.7.Final.jar"/>
 
         <!-- Note that Infinispan 2nd level cache integration is missing -->
     </resources>
