@@ -33,11 +33,11 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <!-- Define the version of JBoss' Java EE 6 APIs and Tools we want to import. -->
         <jboss.bom.version>1.0.0.Final</jboss.bom.version>
+        <applicationServer7Version>7.1.1.Final</applicationServer7Version>
+        <jbossTargetDir>${project.build.directory}/cargo/installs/jboss-as-dist-${applicationServer7Version}/jboss-as-${applicationServer7Version}</jbossTargetDir>
 
         <hibernateOgmVersion>4.0.0.Beta1</hibernateOgmVersion>
         <hibernateSearchVersion>4.2.0.Beta1</hibernateSearchVersion>
-        <applicationServer7Version>7.1.1.Final</applicationServer7Version>
-        <jbossTargetDir>${project.build.directory}/cargo/installs/jboss-as-dist-${applicationServer7Version}/jboss-as-${applicationServer7Version}</jbossTargetDir>
         <beanValidationVersion>4.3.0.Final</beanValidationVersion>
         <infinispanVersion>5.1.7.Final</infinispanVersion>
     </properties>
