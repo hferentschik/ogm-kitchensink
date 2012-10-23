@@ -1,0 +1,365 @@
+From c9cbb97410c694eb8bd9649ef784223c8dd2547d Mon Sep 17 00:00:00 2001
+From: Hardy Ferentschik <hardy@ferentschik.de>
+Date: Tue, 23 Oct 2012 12:04:56 +0200
+Subject: [PATCH] Switch to JPA
+
+---
+ pom.xml                                            |  7 --
+ .../kitchensink/data/FullTextMemberRepository.java | 86 ----------------------
+ src/main/resources/META-INF/persistence.xml        | 10 +--
+ src/main/webapp/WEB-INF/beans.xml                  |  4 -
+ .../test/FullTextOnInfinispanRegistrationTest.java | 63 ----------------
+ .../kitchensink/test/FullTextRegistrationTest.java | 51 -------------
+ .../test/HibernateOGMRegistrationTest.java         | 37 ----------
+ .../kitchensink/test/MemberRegistrationTest.java   |  2 -
+ 8 files changed, 4 insertions(+), 256 deletions(-)
+ delete mode 100644 src/main/java/org/jboss/as/quickstarts/kitchensink/data/FullTextMemberRepository.java
+ delete mode 100644 src/test/java/org/jboss/as/quickstarts/kitchensink/test/FullTextOnInfinispanRegistrationTest.java
+ delete mode 100644 src/test/java/org/jboss/as/quickstarts/kitchensink/test/FullTextRegistrationTest.java
+ delete mode 100644 src/test/java/org/jboss/as/quickstarts/kitchensink/test/HibernateOGMRegistrationTest.java
+
+diff --git a/pom.xml b/pom.xml
+index bb52b5c..ad40611 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -36,7 +36,6 @@
+         <applicationServer7Version>7.1.1.Final</applicationServer7Version>
+         <jbossTargetDir>${project.build.directory}/cargo/installs/jboss-as-dist-${applicationServer7Version}/jboss-as-${applicationServer7Version}</jbossTargetDir>
+ 
+-        <hibernateOgmVersion>4.0.0.Beta1</hibernateOgmVersion>
+         <hibernateSearchVersion>4.2.0.Beta1</hibernateSearchVersion>
+         <beanValidationVersion>4.3.0.Final</beanValidationVersion>
+         <infinispanVersion>5.1.7.Final</infinispanVersion>
+@@ -99,12 +98,6 @@
+                 <scope>import</scope>
+             </dependency>
+             <dependency>
+-                <groupId>org.hibernate.ogm</groupId>
+-                <artifactId>hibernate-ogm-core</artifactId>
+-                <version>${hibernateOgmVersion}</version>
+-                <scope>provided</scope>
+-            </dependency>
+-            <dependency>
+                 <groupId>org.hibernate</groupId>
+                 <artifactId>hibernate-search-orm</artifactId>
+                 <version>${hibernateSearchVersion}</version>
+diff --git a/src/main/java/org/jboss/as/quickstarts/kitchensink/data/FullTextMemberRepository.java b/src/main/java/org/jboss/as/quickstarts/kitchensink/data/FullTextMemberRepository.java
+deleted file mode 100644
+index 47b752a..0000000
+--- a/src/main/java/org/jboss/as/quickstarts/kitchensink/data/FullTextMemberRepository.java
++++ /dev/null
+@@ -1,86 +0,0 @@
+-/* 
+- * JBoss, Home of Professional Open Source
+- * Copyright 2012 Red Hat Inc. and/or its affiliates and other contributors
+- * as indicated by the @author tags. All rights reserved.
+- * See the copyright.txt in the distribution for a
+- * full listing of individual contributors.
+- *
+- * This copyrighted material is made available to anyone wishing to use,
+- * modify, copy, or redistribute it subject to the terms and conditions
+- * of the GNU Lesser General Public License, v. 2.1.
+- * This program is distributed in the hope that it will be useful, but WITHOUT A
+- * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+- * PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more details.
+- * You should have received a copy of the GNU Lesser General Public License,
+- * v.2.1 along with this distribution; if not, write to the Free Software
+- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+- * MA  02110-1301, USA.
+- */
+-package org.jboss.as.quickstarts.kitchensink.data;
+-
+-import java.util.List;
+-import javax.ejb.Stateless;
+-import javax.enterprise.inject.Alternative;
+-import javax.inject.Inject;
+-import javax.persistence.EntityManager;
+-import javax.persistence.PersistenceContext;
+-
+-import org.apache.lucene.search.Query;
+-import org.apache.lucene.search.Sort;
+-import org.apache.lucene.search.SortField;
+-import org.jboss.as.quickstarts.kitchensink.model.Member;
+-
+-import org.hibernate.search.jpa.FullTextEntityManager;
+-import org.hibernate.search.jpa.Search;
+-import org.hibernate.search.query.DatabaseRetrievalMethod;
+-import org.hibernate.search.query.ObjectLookupMethod;
+-import org.hibernate.search.query.dsl.QueryBuilder;
+-
+-@Stateless
+-@Alternative
+-public class FullTextMemberRepository implements MemberRepository {
+-
+-	@Inject
+-	private QueryBuilder queryBuilder;
+-
+-	@PersistenceContext(unitName = "kitchen")
+-	private EntityManager em;
+-
+-	@Override
+-	public Member findById(String id) {
+-		return em.find( Member.class, id );
+-	}
+-
+-	@Override
+-	public Member findByEmail(String email) {
+-		Query luceneQuery = queryBuilder
+-				.keyword()
+-				.onField( "contactDetails.email" )
+-				.matching( email )
+-				.createQuery();
+-		FullTextEntityManager fullTextEntityManager = Search.getFullTextEntityManager( em );
+-		List resultList = fullTextEntityManager.createFullTextQuery( luceneQuery )
+-				.initializeObjectsWith( ObjectLookupMethod.SKIP, DatabaseRetrievalMethod.FIND_BY_ID )
+-				.getResultList();
+-		if ( resultList.size() > 0 ) {
+-			return (Member) resultList.get( 0 );
+-		}
+-		else {
+-			return null;
+-		}
+-	}
+-
+-	@Override
+-	public List<Member> findAllOrderedByName() {
+-		Query luceneQuery = queryBuilder
+-				.all()
+-				.createQuery();
+-		FullTextEntityManager fullTextEntityManager = Search.getFullTextEntityManager( em );
+-		List resultList = fullTextEntityManager.createFullTextQuery( luceneQuery )
+-				.initializeObjectsWith( ObjectLookupMethod.SKIP, DatabaseRetrievalMethod.FIND_BY_ID )
+-				.setSort( new Sort( new SortField( "sortableStoredName", SortField.STRING_VAL ) ) )
+-				.getResultList();
+-		return resultList;
+-	}
+-
+-}
+diff --git a/src/main/resources/META-INF/persistence.xml b/src/main/resources/META-INF/persistence.xml
+index b822ac3..fa68080 100644
+--- a/src/main/resources/META-INF/persistence.xml
++++ b/src/main/resources/META-INF/persistence.xml
+@@ -29,14 +29,12 @@
+         http://java.sun.com/xml/ns/persistence/persistence_2_0.xsd">
+ 
+     <persistence-unit name="kitchen">
+-        <provider>org.hibernate.ogm.jpa.HibernateOgmPersistence</provider>
++        <provider>org.hibernate.ejb.HibernatePersistence</provider>
+ 
+-        <properties>
+-            <!-- Configure Hibernate OGM to mount Infinispan -->
+-            <property name="hibernate.ogm.datastore.provider"
+-                      value="org.hibernate.ogm.datastore.infinispan.impl.InfinispanDatastoreProvider"/>
+-            <property name="hibernate.ogm.infinispan.configuration_resourcename" value="infinispan-ogm-config.xml"/>
++        <!-- Default H2 example data source of AS 7-->
++        <jta-data-source>java:jboss/datasources/ExampleDS</jta-data-source>
+ 
++        <properties>
+             <!-- Properties for Hibernate Search -->
+             <property name="hibernate.search.default.directory_provider" value="infinispan"/>
+             <property name="hibernate.search.infinispan.configuration_resourcename" value="infinispan.xml"/>
+diff --git a/src/main/webapp/WEB-INF/beans.xml b/src/main/webapp/WEB-INF/beans.xml
+index 76e682a..7e285d7 100644
+--- a/src/main/webapp/WEB-INF/beans.xml
++++ b/src/main/webapp/WEB-INF/beans.xml
+@@ -4,8 +4,4 @@
+         http://java.sun.com/xml/ns/javaee 
+         http://java.sun.com/xml/ns/javaee/beans_1_0.xsd">
+ 
+-    <alternatives>
+-        <class>org.jboss.as.quickstarts.kitchensink.data.FullTextMemberRepository</class>
+-    </alternatives>
+-
+ </beans>
+diff --git a/src/test/java/org/jboss/as/quickstarts/kitchensink/test/FullTextOnInfinispanRegistrationTest.java b/src/test/java/org/jboss/as/quickstarts/kitchensink/test/FullTextOnInfinispanRegistrationTest.java
+deleted file mode 100644
+index 149180f..0000000
+--- a/src/test/java/org/jboss/as/quickstarts/kitchensink/test/FullTextOnInfinispanRegistrationTest.java
++++ /dev/null
+@@ -1,63 +0,0 @@
+-/* 
+- * JBoss, Home of Professional Open Source
+- * Copyright 2012 Red Hat Inc. and/or its affiliates and other contributors
+- * as indicated by the @author tags. All rights reserved.
+- * See the copyright.txt in the distribution for a
+- * full listing of individual contributors.
+- *
+- * This copyrighted material is made available to anyone wishing to use,
+- * modify, copy, or redistribute it subject to the terms and conditions
+- * of the GNU Lesser General Public License, v. 2.1.
+- * This program is distributed in the hope that it will be useful, but WITHOUT A
+- * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+- * PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more details.
+- * You should have received a copy of the GNU Lesser General Public License,
+- * v.2.1 along with this distribution; if not, write to the Free Software
+- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+- * MA  02110-1301, USA.
+- */
+-package org.jboss.as.quickstarts.kitchensink.test;
+-
+-import static org.junit.Assert.assertTrue;
+-
+-import javax.inject.Inject;
+-
+-import org.apache.lucene.store.Directory;
+-import org.hibernate.search.engine.spi.SearchFactoryImplementor;
+-import org.hibernate.search.indexes.impl.DirectoryBasedIndexManager;
+-import org.hibernate.search.indexes.spi.IndexManager;
+-import org.hibernate.search.jpa.FullTextEntityManager;
+-import org.hibernate.search.store.DirectoryProvider;
+-import org.infinispan.lucene.InfinispanDirectory;
+-import org.jboss.arquillian.container.test.api.Deployment;
+-import org.jboss.arquillian.junit.Arquillian;
+-import org.jboss.as.quickstarts.kitchensink.model.Member;
+-import org.jboss.shrinkwrap.api.Archive;
+-import org.junit.Test;
+-import org.junit.runner.RunWith;
+-
+-/**
+- * FullTextOnInfinispan.
+- */
+-@RunWith(Arquillian.class)
+-public class FullTextOnInfinispanRegistrationTest extends MemberRegistrationTest {
+-
+-   @Deployment
+-   public static Archive<?> createTestArchive() {
+-      return MemberRegistrationTest.createTestArchive("persistence-fulltext-infinispan.xml", "beans-alternativeQueries.xml", "fulltext-infinispan.war");
+-   }
+-
+-   @Inject
+-   private FullTextEntityManager em;
+-
+-   @Test
+-   public void testQueryRunViaSearch() throws Exception {
+-      SearchFactoryImplementor sfi = (SearchFactoryImplementor)em.getSearchFactory();
+-      IndexManager indexManager = sfi.getIndexBindingForEntity(Member.class).getIndexManagers()[0];
+-      DirectoryBasedIndexManager membersIndexManager = (DirectoryBasedIndexManager) indexManager;
+-      DirectoryProvider directoryProvider = membersIndexManager.getDirectoryProvider();
+-      Directory directory = directoryProvider.getDirectory();
+-      assertTrue(directory instanceof InfinispanDirectory);
+-   }
+-
+-}
+diff --git a/src/test/java/org/jboss/as/quickstarts/kitchensink/test/FullTextRegistrationTest.java b/src/test/java/org/jboss/as/quickstarts/kitchensink/test/FullTextRegistrationTest.java
+deleted file mode 100644
+index 74b14e4..0000000
+--- a/src/test/java/org/jboss/as/quickstarts/kitchensink/test/FullTextRegistrationTest.java
++++ /dev/null
+@@ -1,51 +0,0 @@
+-/* 
+- * JBoss, Home of Professional Open Source
+- * Copyright 2012 Red Hat Inc. and/or its affiliates and other contributors
+- * as indicated by the @author tags. All rights reserved.
+- * See the copyright.txt in the distribution for a
+- * full listing of individual contributors.
+- *
+- * This copyrighted material is made available to anyone wishing to use,
+- * modify, copy, or redistribute it subject to the terms and conditions
+- * of the GNU Lesser General Public License, v. 2.1.
+- * This program is distributed in the hope that it will be useful, but WITHOUT A
+- * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+- * PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more details.
+- * You should have received a copy of the GNU Lesser General Public License,
+- * v.2.1 along with this distribution; if not, write to the Free Software
+- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+- * MA  02110-1301, USA.
+- */
+-package org.jboss.as.quickstarts.kitchensink.test;
+-
+-import static org.junit.Assert.assertTrue;
+-
+-import javax.inject.Inject;
+-
+-import org.jboss.arquillian.container.test.api.Deployment;
+-import org.jboss.arquillian.junit.Arquillian;
+-import org.jboss.as.quickstarts.kitchensink.data.MemberRepository;
+-import org.jboss.shrinkwrap.api.Archive;
+-import org.junit.Test;
+-import org.junit.runner.RunWith;
+-
+-/**
+- * FullTextRegistrationTest.
+- */
+-@RunWith(Arquillian.class)
+-public class FullTextRegistrationTest extends MemberRegistrationTest {
+-
+-   @Deployment
+-   public static Archive<?> createTestArchive() {
+-      return MemberRegistrationTest.createTestArchive("persistence-traditional.xml", "beans-alternativeQueries.xml", "fulltext.war");
+-   }
+-
+-   @Inject
+-   private MemberRepository memberRepository;
+-
+-   @Test
+-   public void testQueryRunViaSearch() throws Exception {
+-      assertTrue(memberRepository.toString().endsWith("FullTextMemberRepository")); //trick to verify the type from the CDI proxy
+-   }
+-
+-}
+diff --git a/src/test/java/org/jboss/as/quickstarts/kitchensink/test/HibernateOGMRegistrationTest.java b/src/test/java/org/jboss/as/quickstarts/kitchensink/test/HibernateOGMRegistrationTest.java
+deleted file mode 100644
+index bdaed0f..0000000
+--- a/src/test/java/org/jboss/as/quickstarts/kitchensink/test/HibernateOGMRegistrationTest.java
++++ /dev/null
+@@ -1,37 +0,0 @@
+-/* 
+- * JBoss, Home of Professional Open Source
+- * Copyright 2012 Red Hat Inc. and/or its affiliates and other contributors
+- * as indicated by the @author tags. All rights reserved.
+- * See the copyright.txt in the distribution for a
+- * full listing of individual contributors.
+- *
+- * This copyrighted material is made available to anyone wishing to use,
+- * modify, copy, or redistribute it subject to the terms and conditions
+- * of the GNU Lesser General Public License, v. 2.1.
+- * This program is distributed in the hope that it will be useful, but WITHOUT A
+- * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+- * PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more details.
+- * You should have received a copy of the GNU Lesser General Public License,
+- * v.2.1 along with this distribution; if not, write to the Free Software
+- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+- * MA  02110-1301, USA.
+- */
+-package org.jboss.as.quickstarts.kitchensink.test;
+-
+-import org.jboss.arquillian.container.test.api.Deployment;
+-import org.jboss.arquillian.junit.Arquillian;
+-import org.jboss.shrinkwrap.api.Archive;
+-import org.junit.runner.RunWith;
+-
+-/**
+- * HibernateOGMRegistrationTest.
+- */
+-@RunWith(Arquillian.class)
+-public class HibernateOGMRegistrationTest extends MemberRegistrationTest {
+-
+-   @Deployment
+-   public static Archive<?> createTestArchive() {
+-      return MemberRegistrationTest.createTestArchive("persistence-hibernateOGM.xml", "beans-alternativeQueries.xml", "hibernate-ogm.war");
+-   }
+-
+-}
+diff --git a/src/test/java/org/jboss/as/quickstarts/kitchensink/test/MemberRegistrationTest.java b/src/test/java/org/jboss/as/quickstarts/kitchensink/test/MemberRegistrationTest.java
+index cfbcb05..38defc0 100644
+--- a/src/test/java/org/jboss/as/quickstarts/kitchensink/test/MemberRegistrationTest.java
++++ b/src/test/java/org/jboss/as/quickstarts/kitchensink/test/MemberRegistrationTest.java
+@@ -22,7 +22,6 @@ import javax.inject.Inject;
+ 
+ import org.jboss.as.quickstarts.kitchensink.controller.MemberController;
+ import org.jboss.as.quickstarts.kitchensink.data.CriteriaMemberRepository;
+-import org.jboss.as.quickstarts.kitchensink.data.FullTextMemberRepository;
+ import org.jboss.as.quickstarts.kitchensink.data.MemberListProducer;
+ import org.jboss.as.quickstarts.kitchensink.data.MemberRepository;
+ import org.jboss.as.quickstarts.kitchensink.model.ContactDetails;
+@@ -68,7 +67,6 @@ public abstract class MemberRegistrationTest {
+ 						MemberController.class,
+ 						MemberListProducer.class,
+ 						CriteriaMemberRepository.class,
+-						FullTextMemberRepository.class,
+ 						MemberRepository.class,
+ 						ContactDetails.class,
+ 						Member.class,
+-- 
+1.7.12.3
+
