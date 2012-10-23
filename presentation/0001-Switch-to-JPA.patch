@@ -1,18 +1,20 @@
-From c9cbb97410c694eb8bd9649ef784223c8dd2547d Mon Sep 17 00:00:00 2001
+From 14c75f0f9be34cdba2b50cacb85e9c4fb14f00fc Mon Sep 17 00:00:00 2001
 From: Hardy Ferentschik <hardy@ferentschik.de>
-Date: Tue, 23 Oct 2012 12:04:56 +0200
+Date: Tue, 23 Oct 2012 12:22:15 +0200
 Subject: [PATCH] Switch to JPA
 
 ---
  pom.xml                                            |  7 --
  .../kitchensink/data/FullTextMemberRepository.java | 86 ----------------------
- src/main/resources/META-INF/persistence.xml        | 10 +--
+ .../kitchensink/model/ContactDetails.java          | 12 +--
+ .../as/quickstarts/kitchensink/model/Member.java   | 21 +-----
+ src/main/resources/META-INF/persistence.xml        | 14 +---
  src/main/webapp/WEB-INF/beans.xml                  |  4 -
  .../test/FullTextOnInfinispanRegistrationTest.java | 63 ----------------
  .../kitchensink/test/FullTextRegistrationTest.java | 51 -------------
  .../test/HibernateOGMRegistrationTest.java         | 37 ----------
- .../kitchensink/test/MemberRegistrationTest.java   |  2 -
- 8 files changed, 4 insertions(+), 256 deletions(-)
+ .../kitchensink/test/MemberRegistrationTest.java   |  4 +-
+ 10 files changed, 10 insertions(+), 289 deletions(-)
  delete mode 100644 src/main/java/org/jboss/as/quickstarts/kitchensink/data/FullTextMemberRepository.java
  delete mode 100644 src/test/java/org/jboss/as/quickstarts/kitchensink/test/FullTextOnInfinispanRegistrationTest.java
  delete mode 100644 src/test/java/org/jboss/as/quickstarts/kitchensink/test/FullTextRegistrationTest.java
@@ -135,11 +137,106 @@ index 47b752a..0000000
 -	}
 -
 -}
+diff --git a/src/main/java/org/jboss/as/quickstarts/kitchensink/model/ContactDetails.java b/src/main/java/org/jboss/as/quickstarts/kitchensink/model/ContactDetails.java
+index f5fd87f..9e945b6 100644
+--- a/src/main/java/org/jboss/as/quickstarts/kitchensink/model/ContactDetails.java
++++ b/src/main/java/org/jboss/as/quickstarts/kitchensink/model/ContactDetails.java
+@@ -23,32 +23,26 @@ import javax.validation.constraints.Digits;
+ import javax.validation.constraints.NotNull;
+ import javax.validation.constraints.Size;
+ 
+-import org.hibernate.annotations.GenericGenerator;
+-import org.hibernate.search.annotations.Analyze;
+-import org.hibernate.search.annotations.Field;
+ import org.hibernate.validator.constraints.Email;
+ import org.hibernate.validator.constraints.NotEmpty;
+ 
+ @Entity
+ public class ContactDetails {
+ 	@Id
+-	@GeneratedValue(generator = "uuid")
+-	@GenericGenerator(name = "uuid", strategy = "uuid2")
+-	private String id;
++	@GeneratedValue
++	private Long id;
+ 
+ 	@NotNull
+ 	@NotEmpty
+ 	@Email
+-	@Field(analyze = Analyze.NO)
+ 	private String email;
+ 
+ 	@NotNull
+ 	@Size(min = 10, max = 12)
+ 	@Digits(fraction = 0, integer = 12)
+-	@Field(analyze = Analyze.NO)
+ 	private String phoneNumber;
+ 
+-	public String getId() {
++	public Long getId() {
+ 		return id;
+ 	}
+ 
+diff --git a/src/main/java/org/jboss/as/quickstarts/kitchensink/model/Member.java b/src/main/java/org/jboss/as/quickstarts/kitchensink/model/Member.java
+index 46ef4dd..c232087 100644
+--- a/src/main/java/org/jboss/as/quickstarts/kitchensink/model/Member.java
++++ b/src/main/java/org/jboss/as/quickstarts/kitchensink/model/Member.java
+@@ -32,47 +32,32 @@ import javax.validation.constraints.Size;
+ import javax.xml.bind.annotation.XmlElement;
+ import javax.xml.bind.annotation.XmlRootElement;
+ 
+-import org.hibernate.annotations.GenericGenerator;
+ import org.hibernate.annotations.Proxy;
+-import org.hibernate.search.annotations.Analyze;
+-import org.hibernate.search.annotations.Field;
+-import org.hibernate.search.annotations.Fields;
+-import org.hibernate.search.annotations.Indexed;
+-import org.hibernate.search.annotations.IndexedEmbedded;
+-import org.hibernate.search.annotations.Norms;
+-import org.hibernate.search.annotations.Store;
+ 
+ @Entity
+ @XmlRootElement
+-@Indexed
+ @Proxy(lazy = false)
+ public class Member implements Serializable {
+ 
+ 	@Id
+-	@GeneratedValue(generator = "uuid")
+-	@GenericGenerator(name = "uuid", strategy = "uuid2")
+-	private String id;
++	@GeneratedValue
++	private Long id;
+ 
+ 	@NotNull
+ 	@Size(min = 1, max = 50)
+ 	@Pattern(regexp = "[A-Za-z ]*", message = "must contain only letters and spaces")
+-	@Fields({
+-			@Field(analyze = Analyze.NO, norms = Norms.NO, store = Store.YES, name = "sortableStoredName"),
+-			@Field(analyze = Analyze.YES, norms = Norms.YES)
+-	})
+ 	private String name;
+ 
+ 	@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+ 	@XmlElement(name = "contacts")
+ 	@Valid
+-	@IndexedEmbedded
+ 	private List<ContactDetails> contactDetails;
+ 
+ 	public Member() {
+ 		contactDetails = new ArrayList<ContactDetails>();
+ 	}
+ 
+-	public String getId() {
++	public Long getId() {
+ 		return id;
+ 	}
+ 
 diff --git a/src/main/resources/META-INF/persistence.xml b/src/main/resources/META-INF/persistence.xml
-index b822ac3..fa68080 100644
+index b822ac3..ccf9555 100644
 --- a/src/main/resources/META-INF/persistence.xml
 +++ b/src/main/resources/META-INF/persistence.xml
-@@ -29,14 +29,12 @@
+@@ -29,18 +29,10 @@
          http://java.sun.com/xml/ns/persistence/persistence_2_0.xsd">
  
      <persistence-unit name="kitchen">
@@ -151,13 +248,16 @@ index b822ac3..fa68080 100644
 -            <property name="hibernate.ogm.datastore.provider"
 -                      value="org.hibernate.ogm.datastore.infinispan.impl.InfinispanDatastoreProvider"/>
 -            <property name="hibernate.ogm.infinispan.configuration_resourcename" value="infinispan-ogm-config.xml"/>
+-
+-            <!-- Properties for Hibernate Search -->
+-            <property name="hibernate.search.default.directory_provider" value="infinispan"/>
+-            <property name="hibernate.search.infinispan.configuration_resourcename" value="infinispan.xml"/>
+-        </properties>
 +        <!-- Default H2 example data source of AS 7-->
 +        <jta-data-source>java:jboss/datasources/ExampleDS</jta-data-source>
  
-+        <properties>
-             <!-- Properties for Hibernate Search -->
-             <property name="hibernate.search.default.directory_provider" value="infinispan"/>
-             <property name="hibernate.search.infinispan.configuration_resourcename" value="infinispan.xml"/>
+         <class>org.jboss.as.quickstarts.kitchensink.model.Member</class>
+         <class>org.jboss.as.quickstarts.kitchensink.model.ContactDetails</class>
 diff --git a/src/main/webapp/WEB-INF/beans.xml b/src/main/webapp/WEB-INF/beans.xml
 index 76e682a..7e285d7 100644
 --- a/src/main/webapp/WEB-INF/beans.xml
@@ -341,7 +441,7 @@ index bdaed0f..0000000
 -
 -}
 diff --git a/src/test/java/org/jboss/as/quickstarts/kitchensink/test/MemberRegistrationTest.java b/src/test/java/org/jboss/as/quickstarts/kitchensink/test/MemberRegistrationTest.java
-index cfbcb05..38defc0 100644
+index cfbcb05..772fcd1 100644
 --- a/src/test/java/org/jboss/as/quickstarts/kitchensink/test/MemberRegistrationTest.java
 +++ b/src/test/java/org/jboss/as/quickstarts/kitchensink/test/MemberRegistrationTest.java
 @@ -22,7 +22,6 @@ import javax.inject.Inject;
@@ -360,6 +460,15 @@ index cfbcb05..38defc0 100644
  						MemberRepository.class,
  						ContactDetails.class,
  						Member.class,
+@@ -99,7 +97,7 @@ public abstract class MemberRegistrationTest {
+ 				)
+ 				.addAsLibraries(
+ 						resolver
+-								.artifact( "org.infinispan:infinispan-lucene-directory:5.1.5.FINAL" ) //MUST MATCH the Infinispan version of the AS
++								.artifact( "org.infinispan:infinispan-lucene-directory:5.1.7.FINAL" ) //MUST MATCH the Infinispan version of the AS
+ 								.exclusions( dependencyExclusions )
+ 								.resolveAs( JavaArchive.class )
+ 				)
 -- 
 1.7.12.3
 
