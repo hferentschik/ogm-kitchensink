@@ -59,7 +59,6 @@
        * Switch to Search for querying
            * Need to add Search annotations
            * Switch from Criteria to Search in _beans.xml_  (via alternatives)
-       * Enable displaying of Infinispan cache in _index.xhtml_ (optional)
 * Deploy:
 
         $  mvn clean package cargo:run
