@@ -40,11 +40,11 @@
 * Switch to OGM (replacement code should be already in the source commented out)
        * Add dependencies to _pom.xml_
        * Change persistence provider in _persistence.xml_
-       * Enable Hibernate 3 module (also _peristence.xml_)
+       * Enable Hibernate 3 module (also _persistence.xml_)
        * Switch to UUID as entity ids (don't forget to switch the id type to _String_)
        * Switch to Search for querying
            * Need to add Search annotations
-           * Switch from Criteria to Search in _MemberListProducer_ and _MemberResourceRESTService_
+           * Switch from Criteria to Search in _beans.xml_  (via alternatives)
        * Enable displaying of Infinispan cache in _index.xhtml_ (optional)
 * Deploy:
 

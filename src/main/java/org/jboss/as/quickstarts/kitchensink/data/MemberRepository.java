@@ -29,5 +29,4 @@ public interface MemberRepository {
 	public abstract Member findByEmail(String email);
 
 	public abstract List<Member> findAllOrderedByName();
-
 }
